@@ -1,0 +1,11 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "a211011015-star.github",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "a211011015-star.github",
+  "start_url": "/index.html",
+  "theme_color": "#ffffff"
+}
