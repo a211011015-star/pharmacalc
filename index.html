@@ -248,133 +248,155 @@ button{
 </div>
 
 </div>
-
 <script>
-let finalWeight=null;
+document.addEventListener("DOMContentLoaded", () => {
 
-/* ===== التحكم بالواجهات ===== */
-useExactWeight.onchange = e=>{
-  exactWeightBox.style.display = e.target.checked?"block":"none";
-  ageBox.style.display = e.target.checked?"none":"block";
-};
+  /* ===== تعريف العناصر ===== */
+  const useExactWeight   = document.getElementById("useExactWeight");
+  const exactWeightBox  = document.getElementById("exactWeightBox");
+  const exactWeight     = document.getElementById("exactWeight");
+  const ageBox          = document.getElementById("ageBox");
+  const ageInput        = document.getElementById("ageInput");
+  const applyFactor     = document.getElementById("applyFactor");
+  const weightResult    = document.getElementById("weightResult");
 
-useConcentration.onchange = e=>{
-  concBox.style.display = e.target.checked?"block":"none";
-};
+  const doseMgKg        = document.getElementById("doseMgKg");
+  const doseResult      = document.getElementById("doseResult");
+  const freqBox         = document.getElementById("freqBox");
 
-document.querySelectorAll('input[name="doseType"]').forEach(r=>{
-  r.onchange = ()=> freqBox.style.display =
-    document.querySelector('input[name="doseType"]:checked').value==="perDay"
-      ?"block":"none";
-});
+  const useConcentration = document.getElementById("useConcentration");
+  const concBox          = document.getElementById("concBox");
+  const concValue        = document.getElementById("concValue");
 
-/* ===== حساب الوزن ===== */
-function calculateWeight(){
-  if(useExactWeight.checked){
-    const w=parseFloat(exactWeight.value);
-    if(!w||w<=0){showWErr("أدخل وزنًا صحيحًا");return;}
-    finalWeight=w; showWOk(w,"وزن حقيقي مُدخل"); return;
-  }
+  let finalWeight = null;
 
-  const a=parseFloat(ageInput.value);
-  if(isNaN(a)||a<0){showWErr("أدخل عمرًا صحيحًا");return;}
+  /* ===== التحكم بالواجهات ===== */
+  useExactWeight.addEventListener("change", e => {
+    exactWeightBox.style.display = e.target.checked ? "block" : "none";
+    ageBox.style.display        = e.target.checked ? "none"  : "block";
+  });
 
-  const ageMonths = (document.querySelector('input[name="ageType"]:checked').value==="months") ? a : a*12;
-  const ageYears  = ageMonths/12;
-  const apply = applyFactor.checked;
+  useConcentration.addEventListener("change", e => {
+    concBox.style.display = e.target.checked ? "block" : "none";
+  });
 
-  let w=null, note="";
+  document.querySelectorAll('input[name="doseType"]').forEach(r => {
+    r.addEventListener("change", () => {
+      freqBox.style.display =
+        document.querySelector('input[name="doseType"]:checked').value === "perDay"
+          ? "block" : "none";
+    });
+  });
 
-  if(ageMonths < 0.5){ w=2.5; note="0 شهر (ثابت)"; }
-  else if(ageMonths < 1.5){ w=3.5; note="1 شهر (ثابت)"; }
-  else if(ageMonths < 2.5){ w=4.5; note="2 شهر (ثابت)"; }
-  else if(ageMonths < 12){
-    const base=(ageMonths+9)/2;
-    w=apply?base*0.85:base; note="3–11 شهر";
-  }
-  else if(ageYears <=5){
-    const base=ageYears*2+8;
-    w=apply?base*0.8:base; note="1–5 سنوات";
-  }
-  else if(ageYears <12){
-    const base=(ageYears*7-5)/2;
-    w=apply?base*0.7:base; note="6–11 سنة";
-  }
-  else if(ageYears <13){
-    const base=(ageYears*7-5)/2;
-    w=apply?base*0.65:base; note="12 سنة";
-  }
-  else{
-    showWErr("العمر خارج المجال — أدخل الوزن الحقيقي");
-    return;
-  }
+  /* ===== حساب الوزن ===== */
+  window.calculateWeight = function () {
 
-  finalWeight=w;
-  showWOk(w,note+(apply?" (معامل مطبق)":""));
-}
-
-function showWOk(w,n){
-  weightResult.innerHTML = `<div class="value">${w.toFixed(2)} كجم</div><div class="note">${n}</div>`;
-}
-function showWErr(m){
-  weightResult.innerHTML = `<div class="value">—</div><div class="note">${m}</div>`;
-}
-
-/* ===== حساب الجرعة ===== */
-function calculateDose(){
-  if(!finalWeight){
-    doseResult.innerHTML = "<div class='small'>احسب الوزن أولًا</div>";
-    return;
-  }
-
-  const mgkg = parseFloat(doseMgKg.value);
-  if(!mgkg || mgkg <= 0){
-    doseResult.innerHTML = "<div class='small'>أدخل جرعة صحيحة</div>";
-    return;
-  }
-
-  /* حساب الجرعة الأساسية دائمًا */
-  let perDose = mgkg * finalWeight;
-
-  if(document.querySelector('input[name="doseType"]:checked').value === "perDay"){
-    const f = parseInt(
-      document.querySelector('input[name="frequency"]:checked').value
-    );
-    perDose = perDose / f;
-  }
-
-  /* نعرض الجرعة بالمليغرام دائمًا */
-  let html = `
-    <div class="mg-line">
-      الجرعة لكل مرة: ${perDose.toFixed(2)} mg
-    </div>
-  `;
-
-  /* نحسب الحجم فقط إذا كان التركيز السائل مُفعّلًا */
-  if(useConcentration.checked){
-    const cv = parseFloat(concValue.value);
-    if(cv && cv > 0){
-      const unit = document.querySelector(
-        'input[name="concUnit"]:checked'
-      ).value;
-
-      const mgPerMl = (unit === "1") ? cv : (cv / 5);
-      const ml = perDose / mgPerMl;
-
-      html = `
-        <div class="ml-card">
-          الحجم لكل مرة<br>
-          ${ml.toFixed(2)} mL
-        </div>
-      ` + html;
+    if (useExactWeight.checked) {
+      const w = parseFloat(exactWeight.value);
+      if (!w || w <= 0) {
+        showWErr("أدخل وزنًا صحيحًا");
+        return;
+      }
+      finalWeight = w;
+      showWOk(w, "وزن حقيقي مُدخل");
+      return;
     }
+
+    const a = parseFloat(ageInput.value);
+    if (isNaN(a) || a < 0) {
+      showWErr("أدخل عمرًا صحيحًا");
+      return;
+    }
+
+    const ageType   = document.querySelector('input[name="ageType"]:checked').value;
+    const ageMonths = ageType === "months" ? a : a * 12;
+    const ageYears  = ageMonths / 12;
+    const apply     = applyFactor.checked;
+
+    let w, note;
+
+    if (ageMonths < 0.5)       { w = 2.5; note = "عند الولادة"; }
+    else if (ageMonths < 1.5)  { w = 3.5; note = "شهر واحد"; }
+    else if (ageMonths < 2.5)  { w = 4.5; note = "شهران"; }
+    else if (ageMonths < 12) {
+      const base = (ageMonths + 9) / 2;
+      w = apply ? base * 0.85 : base;
+      note = "3–11 شهر";
+    }
+    else if (ageYears <= 5) {
+      const base = ageYears * 2 + 8;
+      w = apply ? base * 0.8 : base;
+      note = "1–5 سنوات";
+    }
+    else if (ageYears < 12) {
+      const base = (ageYears * 7 - 5) / 2;
+      w = apply ? base * 0.7 : base;
+      note = "6–11 سنة";
+    }
+    else {
+      showWErr("العمر خارج المجال — أدخل الوزن الحقيقي");
+      return;
+    }
+
+    finalWeight = w;
+    showWOk(w, note + (apply ? " (معامل مطبق)" : ""));
+  };
+
+  function showWOk(w, n) {
+    weightResult.innerHTML =
+      `<div class="value">${w.toFixed(2)} كجم</div><div class="note">${n}</div>`;
   }
 
-  doseResult.innerHTML = html;
-}
+  function showWErr(m) {
+    weightResult.innerHTML =
+      `<div class="value">—</div><div class="note">${m}</div>`;
+  }
+
+  /* ===== حساب الجرعة ===== */
+  window.calculateDose = function () {
+
+    if (!finalWeight) {
+      doseResult.innerHTML = "<div class='small'>احسب الوزن أولًا</div>";
+      return;
+    }
+
+    const mgkg = parseFloat(doseMgKg.value);
+    if (!mgkg || mgkg <= 0) {
+      doseResult.innerHTML = "<div class='small'>أدخل جرعة صحيحة</div>";
+      return;
+    }
+
+    let perDose = mgkg * finalWeight;
+
+    if (document.querySelector('input[name="doseType"]:checked').value === "perDay") {
+      const f = parseInt(document.querySelector('input[name="frequency"]:checked').value);
+      perDose /= f;
+    }
+
+    let html =
+      `<div class="mg-line">الجرعة لكل مرة: ${perDose.toFixed(2)} mg</div>`;
+
+    if (useConcentration.checked) {
+      const cv = parseFloat(concValue.value);
+      if (cv && cv > 0) {
+        const unit = document.querySelector('input[name="concUnit"]:checked').value;
+        const mgPerMl = unit === "1" ? cv : cv / 5;
+        const ml = perDose / mgPerMl;
+
+        html =
+          `<div class="ml-card">الحجم لكل مرة<br>${ml.toFixed(2)} mL</div>` + html;
+      }
+    }
+
+    doseResult.innerHTML = html;
+  };
+
+});
 </script>
+
 
 </body>
 </html>
+
 
 
