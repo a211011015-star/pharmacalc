@@ -320,6 +320,7 @@ function showWErr(m){
   weightResult.innerHTML = `<div class="value">—</div><div class="note">${m}</div>`;
 }
 
+<script>
 /* ===== حساب الجرعة ===== */
 function calculateDose(){
   if(!finalWeight){
@@ -327,42 +328,48 @@ function calculateDose(){
     return;
   }
 
-  const mgkg=parseFloat(doseMgKg.value);
-  if(!mgkg||mgkg<=0){
-    doseResult.innerHTML="<div class='small'>أدخل جرعة صحيحة</div>";
+  const mgkg = parseFloat(doseMgKg.value);
+  if(!mgkg || mgkg <= 0){
+    doseResult.innerHTML = "<div class='small'>أدخل جرعة صحيحة</div>";
     return;
   }
 
+  /* حساب الجرعة الأساسية دائمًا */
   let perDose = mgkg * finalWeight;
 
-  if(document.querySelector('input[name="doseType"]:checked').value==="perDay"){
-    const f=parseInt(document.querySelector('input[name="frequency"]:checked').value);
-    perDose /= f;
+  if(document.querySelector('input[name="doseType"]:checked').value === "perDay"){
+    const f = parseInt(
+      document.querySelector('input[name="frequency"]:checked').value
+    );
+    perDose = perDose / f;
   }
 
-  let html = "";
-
-  if(useConcentration.checked){
-    const cv=parseFloat(concValue.value);
-    if(cv>0){
-      const unit=document.querySelector('input[name="concUnit"]:checked').value;
-      const mgml = unit==="1"?cv:cv/5;
-      const ml = perDose/mgml;
-
-      html += `
-        <div class="ml-card">
-          الحجم لكل مرة<br>
-          ${ml.toFixed(2)} mL
-        </div>
-      `;
-    }
-  }
-
-  html += `
+  /* نعرض الجرعة بالمليغرام دائمًا */
+  let html = `
     <div class="mg-line">
       الجرعة لكل مرة: ${perDose.toFixed(2)} mg
     </div>
   `;
+
+  /* نحسب الحجم فقط إذا كان التركيز السائل مُفعّلًا */
+  if(useConcentration.checked){
+    const cv = parseFloat(concValue.value);
+    if(cv && cv > 0){
+      const unit = document.querySelector(
+        'input[name="concUnit"]:checked'
+      ).value;
+
+      const mgPerMl = (unit === "1") ? cv : (cv / 5);
+      const ml = perDose / mgPerMl;
+
+      html = `
+        <div class="ml-card">
+          الحجم لكل مرة<br>
+          ${ml.toFixed(2)} mL
+        </div>
+      ` + html;
+    }
+  }
 
   doseResult.innerHTML = html;
 }
@@ -370,3 +377,4 @@ function calculateDose(){
 
 </body>
 </html>
+
