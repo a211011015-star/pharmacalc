@@ -219,7 +219,7 @@ button{
   <label for="useConcentration">استخدام تركيز الدواء السائل (اختياري)</label>
 </div>
 
-<div id="concBox" style="display:none">
+<div id="concBox">
   <label>قيمة التركيز</label>
   <input id="concValue" type="number" step="0.1">
 
@@ -276,9 +276,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ageBox.style.display        = e.target.checked ? "none"  : "block";
   });
 
-  useConcentration.addEventListener("change", e => {
-    concBox.style.display = e.target.checked ? "block" : "none";
-  });
 
   document.querySelectorAll('input[name="doseType"]').forEach(r => {
     r.addEventListener("change", () => {
@@ -397,6 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
